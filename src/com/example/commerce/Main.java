@@ -7,7 +7,6 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
 
-        Scanner sc = new Scanner(System.in);
         List<Product> productList = new ArrayList<Product>();
 
         Product product1 = new Product("Galaxy 25", 1200000, "최신 안드로이드 스마트폰",10);
@@ -20,26 +19,7 @@ public class Main {
         productList.add(product3);
         productList.add(product4);
 
-        System.out.println("[ 실시간 커머스 플랫폼 - 전자제품 ]");
-
-        int i = 0;
-        for (Product product : productList) {
-            System.out.printf("%d. %-15s| %,11d원 | %-20s | %4d개 \n", ++i,product.name,product.price,product.description, product.stockQuantity);
-        }
-
-        System.out.println("0. 종료            | 프로그램 종료");
-
-        boolean isChoosen = false;
-        while (!isChoosen) {
-            try {
-                int num = Integer.parseInt(sc.nextLine());
-                if(num == 0){
-                    isChoosen = true;
-                    System.out.println("커머스 플랫폼을 종료합니다.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("숫자 번호를 입력해 주세요");
-            }
-        }
+        CommerceSystem commerceSystem = new CommerceSystem(productList);
+        commerceSystem.start();
     }
 }
