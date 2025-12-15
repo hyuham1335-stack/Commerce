@@ -20,47 +20,47 @@ public class CommerceSystem {
             System.out.println("[ 실시간 커머스 플랫폼 메인 ]");
             int i = 0;
             for (Category category : categories) {
-                System.out.printf("%d. %s\n", ++i, category.categoryName);
+                System.out.printf("%d. %s\n", ++i, category.getCategoryName());
             }
             System.out.println("0. 종료      | 프로그램 종료");
 
-            int selected = getIntegerInput(categories.size());
+            int selected = getIntegerInput(sc, categories.size());
 
             if (selected == 0) {
                 System.out.println("커머스 플랫폼을 종료합니다.");
                 return;
             } else {
-                showProducts(categories.get(selected - 1));
+                showProducts(sc, categories.get(selected - 1));
             }
         }
     }
 
     // 카테고리 내 제품 리스트 출력
-    public static void showProducts(Category category) {
+    public static void showProducts(Scanner sc, Category category) {
 
         int i = 0;
 
         // 메뉴 리스트
         System.out.println("[ 실시간 커머스 플랫폼 - 전자제품 ]");
         for (Product product : category.getProducts()) {
-            System.out.printf("%d. %-15s| %,11d원 | %-20s | %4d개 \n", ++i,product.name,product.price,product.description, product.stockQuantity);
+            System.out.printf("%d. %-15s| %,11d원 | %-20s | %4d개 \n", ++i,product.getName(),product.getPrice(), product.getDescription(), product.getStockQuantity());
         }
         System.out.println("0. 종료            | 프로그램 종료");
 
         while (true) {
-            int selected = getIntegerInput(category.getProducts().size());
+            int selected = getIntegerInput(sc, category.getProducts().size());
 
             if (selected != 0) {
                 Product selectedProduct = category.getProducts().get(selected - 1);
-                System.out.println("선택한 상품: " + selectedProduct.name + " | " + selectedProduct.price + " | " + selectedProduct.description + " | 재고: " + selectedProduct.stockQuantity);
+                System.out.println("선택한 상품: " + selectedProduct.getName() + " | " + selectedProduct.getPrice() + " | " + selectedProduct.getDescription() + " | 재고: " + selectedProduct.getStockQuantity());
             } else {
                 return;
             }
         }
     }
 
-    public static int getIntegerInput(int max) {
-        Scanner sc = new Scanner(System.in);
+    // 정수값 입력을 반환하는 메서드
+    public static int getIntegerInput(Scanner sc, int max) {
 
         while (true) {
             try {

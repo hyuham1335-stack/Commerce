@@ -11,7 +11,6 @@ public class ProductSetup {
         List<Product> productList1 = new ArrayList<Product>();
         List<Product> productList2 = new ArrayList<Product>();
         List<Product> productList3 = new ArrayList<Product>();
-        List<Product> productList4 = new ArrayList<Product>();
 
         Product product1 = new Product("Galaxy 25", 1200000, "최신 안드로이드 스마트폰",10);
         Product product2 = new Product("iphone", 1350000, "애플의 최신 스마트폰",5);
