@@ -14,6 +14,13 @@ public class Product {
         this.stockQuantity = stockQuantity;
     }
 
+    // 물품 구매시 수량 조절
+    public void adjStockQuantity(int quantity) {
+        if(stockQuantity + quantity >= 0){
+            stockQuantity += quantity;
+        }
+    }
+
     // getter
     public String getDescription() {
         return description;
