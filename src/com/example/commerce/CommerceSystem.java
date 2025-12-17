@@ -5,6 +5,7 @@ import java.util.*;
 public class CommerceSystem {
 
     private final Scanner sc;
+    private static String password = "admin123";
     private final Map<Product, Integer> cartItems = new HashMap<>();
     private final Map<Product, Integer> orderedItems = new HashMap<>();
 
@@ -16,9 +17,13 @@ public class CommerceSystem {
     public void start() {
         List<Category> categories = new ArrayList<>(Repository.getCategories());
 
+
         while (true) {
             System.out.println("[ 실시간 커머스 플랫폼 메인 ]");
             int optionCount = 0;
+            int cartOption = 0;
+            int orderedOption = 0;
+
             for (Category category : categories) {
                 System.out.printf("%d. %s\n", ++optionCount, category.getCategoryName());
             }
@@ -31,11 +36,15 @@ public class CommerceSystem {
 
             if(!cartItems.isEmpty()) {
                 System.out.println(++optionCount + ". 장바구니 확인    | 장바구니를 확인 후 주문합니다.");
+                cartOption = optionCount;
             }
 
             if(!orderedItems.isEmpty()) {
                 System.out.println(++optionCount + ". 주문 취소       | 진행중인 주문을 취소합니다.");
+                orderedOption = optionCount;
             }
+
+            System.out.println(++optionCount + ". 관리자 모드");
 
             // 입력한 번호값 반환
             int selected = getIntegerInput(sc, 0, optionCount);
@@ -45,16 +54,236 @@ public class CommerceSystem {
                 return;
             } else if (selected > 0 && selected <= categories.size()) {
                 showProducts(sc, categories.get(selected - 1));
+            } else if (selected == cartOption) {
+                checkShoppingCart();
+            } else if (selected == orderedOption) {
+                cancelOrder();
             } else {
-                // 장바구니 확인 메뉴 선택 시
-                if (selected == categories.size() + 1 && !cartItems.isEmpty()) {
-                    checkShoppingCart();
-                } else {
-                    cancelOrder();
-                }
+                checkAdmin(sc);
             }
         }
     }
+
+    // 관리자 비밀번호 확인
+    private void checkAdmin(Scanner sc) {
+
+        int failureNum = 0;
+        System.out.println();
+        System.out.println("관리자 비밀번호를 입력해주세요:");
+
+        while (true) {
+            String inputPassword = sc.nextLine();
+
+            if(inputPassword.equals(password)) {
+                showAdminMenu(sc);
+                return;
+            } else {
+                failureNum++;
+
+                if (failureNum == 3) {
+                    System.out.println("비밀번호 입력을 3회 실패하였습니다. 메인메뉴로 돌아갑니다.");
+                    return;
+                }
+                System.out.println("올바른 비밀번호를 입력해주세요. 틀린 횟수: " + failureNum + "회" );
+            }
+        }
+    }
+
+    // 관리자 메뉴 출력
+    public void showAdminMenu(Scanner sc) {
+        while (true) {
+            System.out.println();
+            System.out.println("[ 관리자 모드 ]");
+            System.out.println("1. 상품 추가");
+            System.out.println("2. 상품 수정");
+            System.out.println("3. 상품 삭제");
+            System.out.println("4. 전체 상품 현황");
+            System.out.println("0. 메인으로 돌아가기");
+
+            int selected = getIntegerInput(sc, 0, 4);
+
+            switch (selected) {
+                case 0 -> {
+                    System.out.println("메인으로 돌아갑니다.\n");
+                    return;
+                }
+                case 1 -> selectCategory(sc);
+                case 2 -> inputProductNameToEdit(sc);
+                case 3 -> inputProductNameToRemove(sc);
+                case 4 -> showAllProducts(sc);
+            }
+        }
+    }
+
+    // 제품을 추가할 카테고리 선택
+    public void selectCategory(Scanner sc) {
+        System.out.println();
+        System.out.println("어느 카테고리에 상품을 추가하시겠습니까?");
+        int categoryNum = 0;
+
+        for (Category category : Repository.getCategories()) {
+            System.out.println(++categoryNum + ". " + category.getCategoryName());
+        }
+
+        int selected = getIntegerInput(sc, 1, categoryNum);
+        Category selectedCategory = Repository.getCategories().get(selected - 1);
+        inputProductInfo(sc, selectedCategory);
+    }
+
+    // 제품 정보 입력
+    public void inputProductInfo(Scanner sc, Category selectedCategory) {
+        System.out.println("[ " + selectedCategory.getCategoryName() + " 카테고리에 상품 추가 ]");
+        System.out.print("상품명을 입력해주세요: ");
+        String productName = sc.nextLine();
+
+        for(Product product : selectedCategory.getProducts()) {
+            if(product.getName().equals(productName)) {
+                System.out.println("이미 존재하는 상품입니다.");
+                return;
+            }
+        }
+
+        System.out.print("가격을 입력해주세요: ");
+        int price = getIntegerInput(sc, 0 , 0);
+
+        System.out.print("상품 설명을 입력해주세요: ");
+        String description = sc.nextLine();
+
+        System.out.print("재고수량을 입력해주세요: ");
+        int quantity = getIntegerInput(sc, 0 , 0);
+
+        confirmAddProduct(sc, selectedCategory, new Product(productName, price, description, quantity));
+    }
+
+    // 제품 추가 확정 or 취소
+    public void confirmAddProduct(Scanner sc, Category selectedCategory, Product product) {
+
+        String productName = product.getName();
+        int price = product.getPrice();
+        String description = product.getDescription();
+        int quantity = product.getStockQuantity();
+
+        System.out.println();
+        System.out.printf("%s | %,d원 | %s | 재고: %d개\n", productName, price, description, quantity);
+        System.out.println("위 정보로 상품을 추가하시겠습니까?");
+        System.out.println("1. 확인    2. 취소");
+        int selected = getIntegerInput(sc, 1, 2);
+        switch (selected) {
+            case 1 -> {
+                selectedCategory.addProduct(new Product(productName, price, description, quantity));
+                System.out.println("상품이 성공적으로 추가되었습니다!");
+            }
+            case 2 -> System.out.println("상품 추가를 취소하였습니다.");
+        }
+    }
+
+    // 수정할 상품명 입력받는 메서드
+    public void inputProductNameToEdit(Scanner sc) {
+        System.out.println();
+        System.out.print("수정할 상품명을 입력해주세요: ");
+        String inputProductName = sc.nextLine();
+
+        for (Category category : Repository.getCategories()) {
+            for (Product product : category.getProducts()) {
+                if (product.getName().equals(inputProductName)) {
+                    System.out.printf("현재 상품 정보: %s | %,d원 | %s | 재고: %d개", product.getName(), product.getPrice(), product.getDescription(), product.getStockQuantity());
+                    chooseOptionToEdit(sc, product);
+                    return;
+                }
+            }
+        }
+        System.out.println("해당 상품이 존재하지 않습니다.");
+    }
+
+    // 선택한 상품에서 수정할 필드를 선택하는 메서드
+    public void chooseOptionToEdit(Scanner sc, Product product) {
+        System.out.println();
+        System.out.println("수정할 항목을 선택해주세요:");
+        System.out.println("1. 가격");
+        System.out.println("2. 설명");
+        System.out.println("3. 재고수량");
+
+        int selected = getIntegerInput(sc, 1, 3);
+        inputDataToEdit(sc, product, selected);
+    }
+
+    // 수정할 데이터를 입력하는 메서드
+    public void inputDataToEdit(Scanner sc, Product product, int selectedOption) {
+        switch (selectedOption) {
+            case 1 -> {
+                System.out.printf("현재 가격: %,d원\n", product.getPrice());
+                System.out.print("새로운 가격을 입력해주세요: ");
+                int newPrice = getIntegerInput(sc, 0 , 0);
+                System.out.printf("%s의 가격이 %,d원 -> %,d원으로 수정되었습니다.\n", product.getName(), product.getPrice(), newPrice);
+                product.editPrice(newPrice);
+            }
+
+            case 2 -> {
+                System.out.printf("현재 설명: %s\n", product.getDescription());
+                System.out.print("새로운 설명을 입력해주세요: ");
+                String newDescription = sc.nextLine();
+                System.out.printf("%s의 설명이 %s -> %s 로 수정되었습니다.\n", product.getName(), product.getDescription(), newDescription);
+                product.editDescription(newDescription);
+            }
+
+            case 3 -> {
+                System.out.printf("현재 재고: %d개\n", product.getStockQuantity());
+                System.out.print("새로운 재고량을 입력해주세요: ");
+                int newStockQuantity = getIntegerInput(sc, 0 , 0);
+                System.out.printf("%s의 재고가 %d개 -> %d개로 수정되었습니다.\n", product.getName(), product.getStockQuantity(), newStockQuantity);
+                product.editStockQuantity(newStockQuantity);
+            }
+        }
+    }
+
+    // 삭제할 상품명을 입력받는 메서드
+    public void inputProductNameToRemove(Scanner sc) {
+        System.out.println();
+        System.out.print("삭제할 상품명을 입력해주세요: ");
+        String inputProductName = sc.nextLine();
+
+        for (Category category : Repository.getCategories()) {
+            for (Product product : category.getProducts()) {
+                if (product.getName().equals(inputProductName)) {
+                    System.out.printf("현재 상품 정보: %s | %,d원 | %s | 재고: %d개", product.getName(), product.getPrice(), product.getDescription(), product.getStockQuantity());
+                    confirmRemoveProduct(sc, category, product);
+                    return;
+                }
+            }
+        }
+        System.out.println("해당 상품이 존재하지 않습니다.");
+    }
+
+    // 상품 삭제를 확인 후 삭제하는 메서드
+    public void confirmRemoveProduct(Scanner sc, Category category, Product product) {
+        System.out.println();
+        System.out.println("해당 상품을 삭제하시겠습니까?");
+        System.out.println("1. 확인    2. 취소");
+        int selected = getIntegerInput(sc, 1, 2);
+
+        switch (selected) {
+            case 1 -> {
+                category.getProducts().remove(product);
+                cartItems.remove(product);
+                orderedItems.remove(product);
+                System.out.println("상품 삭제가 완료되었습니다.");
+            }
+
+            case 2 -> {
+                System.out.println("상품 삭제가 취소되었습니다.");
+            }
+        }
+    }
+
+    public void showAllProducts(Scanner sc) {
+        System.out.println("[ 전체 상품 목록 ]");
+        for (Category category : Repository.getCategories()) {
+            for (Product product : category.getProducts()) {
+                System.out.printf("%s | %s | %,d원 | %s | 재고: %d개\n", category.getCategoryName(), product.getName(), product.getPrice(), product.getDescription(), product.getStockQuantity());
+            }
+        }
+    }
+
 
     // 카테고리 내 제품 리스트 출력
     public void showProducts(Scanner sc, Category category) {
@@ -197,11 +426,21 @@ public class CommerceSystem {
     }
 
     // 정수값 입력을 반환하는 메서드
+    // min == max 일 경우 범위 제한 없이 양의 정수를 입력받아 반환
     public static int getIntegerInput(Scanner sc, int min, int max) {
 
         while (true) {
             try {
                 int num = Integer.parseInt(sc.nextLine());
+
+                if (min == max) {
+                    if (num <= 0) {
+                        System.out.println("양의 정수를 입력해주세요");
+                        continue;
+                    }
+                    return num;
+                }
+
                 if(num > max || num < min) {
                     System.out.println(min + " ~ " + max + " 사이의 정수를 입력해 주세요");
                 } else {
@@ -212,5 +451,4 @@ public class CommerceSystem {
             }
         }
     }
-
 }

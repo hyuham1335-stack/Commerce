@@ -16,6 +16,9 @@ public class Category {
         this.categoryName = categoryName;
     }
 
+    public void addProduct(Product product) {
+        products.add(product);
+    }
 
     //getter
 

@@ -14,10 +14,29 @@ public class Product {
         this.stockQuantity = stockQuantity;
     }
 
-    // 물품 구매시 수량 조절
+    // 물품 주문 성공 및 주문 취소시 수량 조절 메서드
     public void adjStockQuantity(int quantity) {
         if(stockQuantity + quantity >= 0){
             stockQuantity += quantity;
+        }
+    }
+
+
+    // 관리자 메뉴를 통한 필드 편집 메서드
+
+    public void editPrice(int newPrice) {
+        if(newPrice > 0) {
+            price = newPrice;
+        }
+    }
+
+    public void editDescription(String newDescription) {
+        description = newDescription;
+    }
+
+    public void editStockQuantity(int newStockQuantity) {
+        if(newStockQuantity >= 0) {
+            stockQuantity = newStockQuantity;
         }
     }
 
