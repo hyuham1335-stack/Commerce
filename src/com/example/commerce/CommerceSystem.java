@@ -9,7 +9,9 @@ public class CommerceSystem {
     private final Scanner sc;
     private static String password = "admin123";
     private final Map<Product, Integer> cartItems = new HashMap<>();
+    private final Map<Product, Integer> removedFromCart = new HashMap<>();
     private final Map<Product, Integer> orderedItems = new HashMap<>();
+    private int totalPurchasePrice = 0;
 
     public CommerceSystem(Scanner sc) {
         this.sc = sc;
@@ -21,6 +23,7 @@ public class CommerceSystem {
 
 
         while (true) {
+
             System.out.println("[ 실시간 커머스 플랫폼 메인 ]");
             int optionCount = 0;
             int cartOption = 0;
@@ -49,7 +52,7 @@ public class CommerceSystem {
             System.out.println(++optionCount + ". 관리자 모드");
 
             // 입력한 번호값 반환
-            int selected = getIntegerInput(sc, 0, optionCount);
+            int selected = InputManager.getIntegerInput(sc, 0, optionCount);
 
             if (selected == 0) {
                 System.out.println("커머스 플랫폼을 종료합니다.");
@@ -102,7 +105,7 @@ public class CommerceSystem {
             System.out.println("4. 전체 상품 현황");
             System.out.println("0. 메인으로 돌아가기");
 
-            int selected = getIntegerInput(sc, 0, 4);
+            int selected = InputManager.getIntegerInput(sc, 0, 4);
 
             switch (selected) {
                 case 0 -> {
@@ -127,7 +130,7 @@ public class CommerceSystem {
             System.out.println(++categoryNum + ". " + category.getCategoryName());
         }
 
-        int selected = getIntegerInput(sc, 1, categoryNum);
+        int selected = InputManager.getIntegerInput(sc, 1, categoryNum);
         Category selectedCategory = Repository.getCategories().get(selected - 1);
         inputProductInfo(sc, selectedCategory);
     }
@@ -146,13 +149,13 @@ public class CommerceSystem {
         }
 
         System.out.print("가격을 입력해주세요: ");
-        int price = getIntegerInput(sc, 0 , 0);
+        int price = InputManager.getIntegerInput(sc, 0 , 0);
 
         System.out.print("상품 설명을 입력해주세요: ");
         String description = sc.nextLine();
 
         System.out.print("재고수량을 입력해주세요: ");
-        int quantity = getIntegerInput(sc, 0 , 0);
+        int quantity = InputManager.getIntegerInput(sc, 0 , 0);
 
         confirmAddProduct(sc, selectedCategory, new Product(productName, price, description, quantity));
     }
@@ -169,7 +172,7 @@ public class CommerceSystem {
         System.out.printf("%s | %,d원 | %s | 재고: %d개\n", productName, price, description, quantity);
         System.out.println("위 정보로 상품을 추가하시겠습니까?");
         System.out.println("1. 확인    2. 취소");
-        int selected = getIntegerInput(sc, 1, 2);
+        int selected = InputManager.getIntegerInput(sc, 1, 2);
         switch (selected) {
             case 1 -> {
                 selectedCategory.addProduct(new Product(productName, price, description, quantity));
@@ -205,7 +208,7 @@ public class CommerceSystem {
         System.out.println("2. 설명");
         System.out.println("3. 재고수량");
 
-        int selected = getIntegerInput(sc, 1, 3);
+        int selected = InputManager.getIntegerInput(sc, 1, 3);
         inputDataToEdit(sc, product, selected);
     }
 
@@ -215,7 +218,7 @@ public class CommerceSystem {
             case 1 -> {
                 System.out.printf("현재 가격: %,d원\n", product.getPrice());
                 System.out.print("새로운 가격을 입력해주세요: ");
-                int newPrice = getIntegerInput(sc, 0 , 0);
+                int newPrice = InputManager.getIntegerInput(sc, 0 , 0);
                 System.out.printf("%s의 가격이 %,d원 -> %,d원으로 수정되었습니다.\n", product.getName(), product.getPrice(), newPrice);
                 product.editPrice(newPrice);
             }
@@ -231,7 +234,7 @@ public class CommerceSystem {
             case 3 -> {
                 System.out.printf("현재 재고: %d개\n", product.getStockQuantity());
                 System.out.print("새로운 재고량을 입력해주세요: ");
-                int newStockQuantity = getIntegerInput(sc, 0 , 0);
+                int newStockQuantity = InputManager.getIntegerInput(sc, 0 , 0);
                 System.out.printf("%s의 재고가 %d개 -> %d개로 수정되었습니다.\n", product.getName(), product.getStockQuantity(), newStockQuantity);
                 product.editStockQuantity(newStockQuantity);
             }
@@ -261,7 +264,7 @@ public class CommerceSystem {
         System.out.println();
         System.out.println("해당 상품을 삭제하시겠습니까?");
         System.out.println("1. 확인    2. 취소");
-        int selected = getIntegerInput(sc, 1, 2);
+        int selected = InputManager.getIntegerInput(sc, 1, 2);
 
         switch (selected) {
             case 1 -> {
@@ -297,7 +300,7 @@ public class CommerceSystem {
             System.out.println("3. 가격대별 필터링 (100만원 초과)");
             System.out.println("0. 뒤로가기");
 
-            int selected = getIntegerInput(sc, 0, 3);
+            int selected = InputManager.getIntegerInput(sc, 0, 3);
 
             switch (selected) {
                 case 0 -> {return;}
@@ -384,7 +387,7 @@ public class CommerceSystem {
     // 장바구니에 넣을 상품 선택
     public int selectProductForCart(Scanner sc, List<Product> products) {
 
-        int selected = getIntegerInput(sc, 0, products.size());
+        int selected = InputManager.getIntegerInput(sc, 0, products.size());
 
         if (selected != 0) {
             Product selectedProduct = products.get(selected - 1);
@@ -401,7 +404,7 @@ public class CommerceSystem {
         System.out.println("위 상품을 장바구니에 추가하시겠습니까?");
         System.out.println("1. 확인        2. 취소");
 
-        int selected = getIntegerInput(sc, 1, 2);
+        int selected = InputManager.getIntegerInput(sc, 1, 2);
 
         if (selected == 1) {
             if (product.getStockQuantity() <= 0) {
@@ -439,41 +442,85 @@ public class CommerceSystem {
         System.out.println();
         System.out.println("1. 주문 확정      2. 메인으로 돌아가기 ");
 
-        int selected = getIntegerInput(sc, 1, 2);
-        if (selected == 1) {
-            System.out.println();
+        int selected = InputManager.getIntegerInput(sc, 1, 2);
 
-            Iterator<Map.Entry<Product, Integer>> it = cartItems.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<Product, Integer> entry = it.next();
-                Product product = entry.getKey();
-                Integer cartItemCount = entry.getValue();
-
-                if(product.getStockQuantity() < cartItemCount) {
-                    System.out.println("재고가 부족하여 "+ product.getName() + " 상품 구매를 실패하였습니다.");
-                } else {
-                    product.adjStockQuantity(-cartItemCount);
-                    System.out.println(product.getName() + " 재고가 " + (product.getStockQuantity() + cartItemCount) +"개 -> " + product.getStockQuantity() + "개로 업데이트되었습니다.");
-                    it.remove();
-                    orderedItems.put(product, cartItemCount);
-                }
-            }
-
-            int leftPrice = cartItems.keySet().stream()
-                        .mapToInt(product -> product.getPrice() * cartItems.get(product))
-                        .sum();
-
-            if(leftPrice == totalPrice) {
-                System.out.println("주문을 실패하였습니다.\n");
-            } else {
-                System.out.println("주문이 완료되었습니다! 총 금액: " + (totalPrice - leftPrice) + "원\n");
-
-            }
+        if(selected == 1) {
+            checkCustomerGrade(sc);
         } else {
             System.out.println("메인으로 돌아갑니다.\n");
         }
     }
 
+    // 장바구니 주문 전 고객 등급 확인
+    public void checkCustomerGrade(Scanner sc) {
+        System.out.println("고객 등급을 입력해주세요");
+        int i = 0;
+        for(CustomerGrade grade : CustomerGrade.values()) {
+            System.out.printf("%d. %-9s   :  %d%% 할인\n", ++i, grade.toString(), CustomerGrade.getDiscountRate(grade));
+        }
+
+        int selected = InputManager.getIntegerInput(sc, 1, 4);
+
+        try {
+            CustomerGrade customerGrade = CustomerGrade.getCustomerGrade(selected);
+            confirmOrder(sc, customerGrade);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // 장바구니에서 구매 가능한 품목 확인
+    public void confirmOrder(Scanner sc, CustomerGrade customerGrade) {
+        System.out.println();
+
+        Iterator<Map.Entry<Product, Integer>> it = cartItems.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Product, Integer> entry = it.next();
+            Product product = entry.getKey();
+            Integer cartItemCount = entry.getValue();
+
+            if(product.getStockQuantity() < cartItemCount) {
+                System.out.println("재고가 부족하여 "+ product.getName() + " 상품은 구매할 수 없습니다.");
+                System.out.println();
+            } else {
+                product.adjStockQuantity(-cartItemCount);
+                // 장바구니에서 삭제될 상품 임시 저장
+                removedFromCart.put(product, cartItemCount);
+                it.remove();
+                orderedItems.put(product, cartItemCount);
+            }
+        }
+
+        if (!removedFromCart.isEmpty()) {
+            showOrderResult(sc, customerGrade);
+        }
+    }
+
+    // 장바구니 주문 결과 출력
+    public void showOrderResult(Scanner sc, CustomerGrade customerGrade) {
+
+        int totalPrice = removedFromCart.keySet().stream()
+                .mapToInt(product -> product.getPrice() * removedFromCart.get(product))
+                .sum();
+
+        int discountRate = CustomerGrade.getDiscountRate(customerGrade);
+        int discountPrice = (totalPrice * discountRate) / 100;
+        int finalPrice = totalPrice - discountPrice;
+
+        System.out.println("주문이 완료되었습니다!");
+        System.out.printf("할인 전 금액: %,d\n", totalPrice);
+        System.out.printf("%s 등급 할인(%d%%): -%,d원\n", customerGrade.toString(), discountRate, discountPrice);
+        System.out.printf("최종 결제 금액: %,d원\n", finalPrice);
+        for(Product product : removedFromCart.keySet()) {
+            System.out.println(product.getName() + " 재고가 " + (product.getStockQuantity() + removedFromCart.get(product)) +"개 -> " + product.getStockQuantity() + "개로 업데이트되었습니다.");
+        }
+        System.out.println();
+
+        removedFromCart.clear();
+        totalPurchasePrice += finalPrice;
+    }
+
+    // 주문 취소 기능
     public void cancelOrder() {
         System.out.println();
         System.out.println("[ 주문 완료 내역 ]");
@@ -483,15 +530,11 @@ public class CommerceSystem {
         System.out.println();
         System.out.println("[ 총 결제 금액 ]");
 
-        int totalPrice = orderedItems.keySet().stream()
-                .mapToInt(product -> product.getPrice() * orderedItems.get(product))
-                .sum();
-
-        System.out.println(totalPrice);
+        System.out.println(totalPurchasePrice);
         System.out.println();
         System.out.println("1. 주문 취소      2. 메인으로 돌아가기 ");
 
-        int selected = getIntegerInput(sc, 1, 2);
+        int selected = InputManager.getIntegerInput(sc, 1, 2);
 
         if (selected == 1) {
             if (orderedItems.isEmpty()) {
@@ -503,36 +546,12 @@ public class CommerceSystem {
                 }
                 orderedItems.clear();
                 System.out.println("주문을 취소하였습니다.\n");
+                totalPurchasePrice = 0;
             }
         } else {
             System.out.println("메인으로 돌아갑니다.\n");
         }
     }
 
-    // 정수값 입력을 반환하는 메서드
-    // min == max 일 경우 범위 제한 없이 양의 정수를 입력받아 반환
-    public static int getIntegerInput(Scanner sc, int min, int max) {
 
-        while (true) {
-            try {
-                int num = Integer.parseInt(sc.nextLine());
-
-                if (min == max) {
-                    if (num <= 0) {
-                        System.out.println("양의 정수를 입력해주세요");
-                        continue;
-                    }
-                    return num;
-                }
-
-                if(num > max || num < min) {
-                    System.out.println(min + " ~ " + max + " 사이의 정수를 입력해 주세요");
-                } else {
-                    return num;
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("숫자 번호를 입력해 주세요");
-            }
-        }
-    }
 }
