@@ -1,6 +1,8 @@
 package com.example.commerce;
 
 import java.util.*;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class CommerceSystem {
 
@@ -53,7 +55,7 @@ public class CommerceSystem {
                 System.out.println("커머스 플랫폼을 종료합니다.");
                 return;
             } else if (selected > 0 && selected <= categories.size()) {
-                showProducts(sc, categories.get(selected - 1));
+                showCategoryFilterMenu(sc, categories.get(selected - 1));
             } else if (selected == cartOption) {
                 checkShoppingCart();
             } else if (selected == orderedOption) {
@@ -275,6 +277,7 @@ public class CommerceSystem {
         }
     }
 
+    // 등록된 모든 상품 출력
     public void showAllProducts(Scanner sc) {
         System.out.println("[ 전체 상품 목록 ]");
         for (Category category : Repository.getCategories()) {
@@ -284,30 +287,111 @@ public class CommerceSystem {
         }
     }
 
+    // 카테고리 내 상품을 출력하기 위한 필터를 선택하는 메뉴
+    public void showCategoryFilterMenu(Scanner sc, Category category) {
+
+        while (true) {
+            System.out.println("[ " + category.getCategoryName() + " 카테고리 ]");
+            System.out.println("1. 전체 상품 보기");
+            System.out.println("2. 가격대별 필터링 (100만원 이하)");
+            System.out.println("3. 가격대별 필터링 (100만원 초과)");
+            System.out.println("0. 뒤로가기");
+
+            int selected = getIntegerInput(sc, 0, 3);
+
+            switch (selected) {
+                case 0 -> {return;}
+                case 1 -> showAllProductsInCategory(sc, category);
+                case 2 -> showProductsByPrice(sc, category, 1000000, false);
+                case 3 -> showProductsByPrice(sc, category, 1000000, true);
+            }
+        }
+    }
+
+    public void showProductsByPrice(Scanner sc, Category category, int filterPrice, Boolean isUp) {
+
+        List<Product> list = new ArrayList<>();
+
+        while (true) {
+            int i = 0;
+
+            if (isUp) {
+
+                list = category.getProducts().stream()
+                        .filter(product -> product.getPrice() > filterPrice)
+                        .toList();
+
+                if(list.isEmpty()) {
+                    System.out.printf("%,d원을 초과하는 상품이 없습니다.\n",filterPrice);
+                    return;
+                }
+
+                System.out.printf("[ %,d원 초과 상품 목록 ]\n", filterPrice);
+                for (Product product : list) {
+                    System.out.printf("%d. %-15s| %,11d원 | %-20s | %4d개 \n", ++i, product.getName(), product.getPrice(), product.getDescription(), product.getStockQuantity());
+                }
+            } else {
+
+                list = category.getProducts().stream()
+                        .filter(product -> product.getPrice() <= filterPrice)
+                        .toList();
+
+                if(list.isEmpty()) {
+                    System.out.printf("%,d원 이하의 상품이 없습니다.\n",filterPrice);
+                    return;
+                }
+
+                System.out.printf("[ %,d원 이하 상품 목록 ]\n", filterPrice);
+                for (Product product : list) {
+                    System.out.printf("%d. %-15s| %,11d원 | %-20s | %4d개 \n", ++i, product.getName(), product.getPrice(), product.getDescription(), product.getStockQuantity());
+                }
+            }
+
+
+
+            System.out.println("0. 뒤로가기");
+
+            if (selectProductForCart(sc, list) == 0) {
+                return;
+            }
+        }
+    }
 
     // 카테고리 내 제품 리스트 출력
-    public void showProducts(Scanner sc, Category category) {
+    public void showAllProductsInCategory(Scanner sc, Category category) {
+
+        if (category.getProducts().isEmpty()) {
+            System.out.println("해당하는 제품이 존재하지 않습니다.\n");
+            return;
+        }
 
         while (true) {
             int i = 0;
 
             // 메뉴 리스트
-            System.out.println("[ 실시간 커머스 플랫폼 - 전자제품 ]");
+            System.out.println("[ " + category.getCategoryName() + " 카테고리 ]");
             for (Product product : category.getProducts()) {
                 System.out.printf("%d. %-15s| %,11d원 | %-20s | %4d개 \n", ++i,product.getName(),product.getPrice(), product.getDescription(), product.getStockQuantity());
             }
-            System.out.println("0. 종료            | 프로그램 종료");
+            System.out.println("0. 뒤로가기");
 
-            int selected = getIntegerInput(sc, 0, category.getProducts().size());
-
-            if (selected != 0) {
-                Product selectedProduct = category.getProducts().get(selected - 1);
-                System.out.println("선택한 상품: " + selectedProduct.getName() + " | " + selectedProduct.getPrice() + " | " + selectedProduct.getDescription() + " | 재고: " + selectedProduct.getStockQuantity());
-                addShoppingCart(sc, selectedProduct);
-            } else {
+            if(selectProductForCart(sc, category.getProducts()) == 0){
                 return;
             }
         }
+    }
+
+    // 장바구니에 넣을 상품 선택
+    public int selectProductForCart(Scanner sc, List<Product> products) {
+
+        int selected = getIntegerInput(sc, 0, products.size());
+
+        if (selected != 0) {
+            Product selectedProduct = products.get(selected - 1);
+            System.out.println("선택한 상품: " + selectedProduct.getName() + " | " + selectedProduct.getPrice() + " | " + selectedProduct.getDescription() + " | 재고: " + selectedProduct.getStockQuantity());
+            addShoppingCart(sc, selectedProduct);
+        }
+        return selected;
     }
 
     // 장바구니에 추가하는 메서드
